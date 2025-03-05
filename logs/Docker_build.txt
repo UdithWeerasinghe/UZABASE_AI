@@ -1,0 +1,51 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.14kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/debian:latest
+#2 DONE 1.9s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/9] FROM docker.io/library/debian:latest@sha256:35286826a88dc879b4f438b645ba574a55a14187b483d09213a024dc0c0a64ed
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 686B done
+#5 DONE 0.0s
+
+#6 [8/9] COPY code /app/code
+#6 CACHED
+
+#7 [4/9] WORKDIR /app
+#7 CACHED
+
+#8 [6/9] RUN /opt/conda/bin/conda install -n myenv --yes --file /app/requirements.txt ||     /opt/conda/bin/conda run -n myenv pip install --default-timeout=1000 -r /app/requirements.txt
+#8 CACHED
+
+#9 [7/9] RUN /opt/conda/bin/conda run -n myenv pip install pyspark
+#9 CACHED
+
+#10 [2/9] RUN apt-get update && apt-get install -y wget     && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh     && bash miniconda.sh -b -p /opt/conda     && rm miniconda.sh
+#10 CACHED
+
+#11 [3/9] RUN conda create -n myenv python=3.11 -y
+#11 CACHED
+
+#12 [5/9] COPY requirements.txt /app/requirements.txt
+#12 CACHED
+
+#13 [9/9] WORKDIR /app/code
+#13 CACHED
+
+#14 exporting to image
+#14 exporting layers done
+#14 writing image sha256:73264453e86a1739931ed4c1d2128934b69c5cb6d1f213f4ee4a17249d1ed970 done
+#14 naming to docker.io/library/ai_data_engineer_a done
+#14 DONE 0.0s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/1l6a3o63y4i3qad3in4jzuwbs

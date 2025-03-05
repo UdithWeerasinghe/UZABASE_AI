@@ -1,0 +1,29 @@
+name: Data Processing Workflow
+
+on: [push]
+
+jobs:
+  run-processing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: "3.11"
+          activate-environment: myenv
+
+      - name: Install Dependencies
+        run: |
+          conda install --yes --file requirements.txt || pip install -r requirements.txt
+
+      - name: Run Data Processing
+        run: |
+          python code/src/run.py process_data --cfg code/config/config.yaml --dirout outputs/
+          python code/src/run.py process_data_all --cfg code/config/config.yaml --dirout outputs/
+
+      - name: Run Tests
+        run: |
+          python -m unittest discover tests/
