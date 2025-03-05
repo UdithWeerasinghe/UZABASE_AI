@@ -27,27 +27,74 @@ def load_config(config_path: str) -> dict:
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
+# def process_selected_words(spark: SparkSession, dataset_path: str, selected_words: list, output_dir: str) -> None:
+#     """Process selected words and save the result as a parquet file."""
+#     logger.info(f"Processing selected words: {selected_words}")
+    
+#     dataset = spark.read.option("header", True).csv(dataset_path)
+    
+#     word_counts = []
+#     for word in selected_words:
+#         count = dataset.filter(col("description").contains(word)).count()
+#         word_counts.append((word, count))
+#         logger.debug(f"Word: {word}, Count: {count}")
+    
+#     df_output = spark.createDataFrame(word_counts, ["word", "count"])
+#     output_path = Path(output_dir) / f"word_count_{pd.Timestamp.today().strftime('%Y%m%d')}.parquet"
+#     df_output.write.parquet(str(output_path))
+#     logger.info(f"Processed data saved to {output_path}")
+    
+#     # Explicitly flush logs
+#     for handler in logger.handlers:
+#         handler.flush()
+
+
 def process_selected_words(spark: SparkSession, dataset_path: str, selected_words: list, output_dir: str) -> None:
-    """Process selected words and save the result as a parquet file."""
+    """Process selected words from a JSONL file and save the result as a parquet file."""
     logger.info(f"Processing selected words: {selected_words}")
-    
-    dataset = spark.read.option("header", True).csv(dataset_path)
-    
+
+    spark = SparkSession.builder \
+    .appName("WordProcessing") \
+    .config("spark.hadoop.fs.defaultFS", "file://") \
+    .config("spark.hadoop.fs.native.lib", "false") \
+    .config("spark.hadoop.fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem") \
+    .getOrCreate()
+
+
+
+
+
+    # Read JSONL file
+    dataset = spark.read.json(dataset_path)
+
+    # Ensure 'description' column exists
+    if "description" not in dataset.columns:
+        logger.error("The dataset does not contain a 'description' column.")
+        return
+
     word_counts = []
     for word in selected_words:
         count = dataset.filter(col("description").contains(word)).count()
         word_counts.append((word, count))
         logger.debug(f"Word: {word}, Count: {count}")
-    
+
+    # Create DataFrame for output
     df_output = spark.createDataFrame(word_counts, ["word", "count"])
+
+    # Save result to local Parquet file
     output_path = Path(output_dir) / f"word_count_{pd.Timestamp.today().strftime('%Y%m%d')}.parquet"
-    df_output.write.parquet(str(output_path))
-    logger.info(f"Processed data saved to {output_path}")
     
+    # Save as Parquet to local filesystem
+    df_output.write.mode("overwrite").parquet(str(output_path))
+    logger.info(f"Processed data saved to {output_path}")
+
+    # Optionally, print the word counts to the console
+    for word, count in word_counts:
+        print(f"Word: {word}, Count: {count}")
+
     # Explicitly flush logs
     for handler in logger.handlers:
         handler.flush()
-
 
 
 

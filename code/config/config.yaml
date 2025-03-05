@@ -1,3 +1,0 @@
-dataset_name: "sh0416/ag_news"
-output_dir: "outputs/"
-selected_words: ["president", "the", "Asia"]

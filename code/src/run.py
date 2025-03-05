@@ -48,7 +48,15 @@ def main():
     parser_process_all.add_argument("--dirout", required=True, help="Output directory")
 
     args = parser.parse_args()
-    spark = SparkSession.builder.appName("WordProcessing").getOrCreate()
+    spark = SparkSession.builder \
+    .appName("WordProcessing") \
+    .config("spark.hadoop.fs.defaultFS", "file://") \
+    .config("spark.hadoop.fs.native.lib", "false") \
+    .config("spark.hadoop.fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem") \
+    .getOrCreate()
+
+
+
 
     if args.command == "process_data":
         logger.info("Running process_data command")
