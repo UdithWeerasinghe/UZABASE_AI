@@ -19,6 +19,7 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+logging.getLogger("py4j").setLevel(logging.WARNING)
 
 logger.info("Process started") 
 
@@ -32,7 +33,7 @@ def process_all_words(spark: SparkSession, dataset_path: str, output_dir: str) -
     """Process all words and save the result as a parquet file."""
     logger.info("Processing all words in the dataset")
     
-    dataset = spark.read.option("header", True).csv(dataset_path)
+    dataset = spark.read.json(dataset_path)
     
     words = dataset.select(explode(split(col("description"), " ")).alias("word"))
     
@@ -40,7 +41,7 @@ def process_all_words(spark: SparkSession, dataset_path: str, output_dir: str) -
     logger.debug(f"Total unique words processed: {word_counts.count()}")
     
     output_path = Path(output_dir) / f"word_count_all_{pd.Timestamp.today().strftime('%Y%m%d')}.parquet"
-    word_counts.write.parquet(str(output_path))
+    word_counts.write.mode("overwrite").parquet(str(output_path))
     logger.info(f"Processed all words saved to {output_path}")
     
     for handler in logger.handlers:

@@ -48,10 +48,10 @@
 FROM debian:latest
 
 # Install Java, wget, and procps (for ps command)
-RUN apt-get update && apt-get install -y wget openjdk-17-jdk-headless procps
+RUN apt-get update && apt-get install -y wget openjdk-11-jdk-headless procps
 
 # Set Java environment variables for PySpark
-ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Install Miniconda

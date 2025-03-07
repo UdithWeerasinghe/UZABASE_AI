@@ -20,6 +20,8 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+logging.getLogger("py4j").setLevel(logging.WARNING)
+
 
 def load_config(config_path: str) -> dict:
     """Load configuration from a YAML file."""
@@ -53,17 +55,6 @@ def process_selected_words(spark: SparkSession, dataset_path: str, selected_word
     """Process selected words from a JSONL file and save the result as a parquet file."""
     logger.info(f"Processing selected words: {selected_words}")
 
-    spark = SparkSession.builder \
-    .appName("WordProcessing") \
-    .config("spark.hadoop.fs.defaultFS", "file://") \
-    .config("spark.hadoop.fs.native.lib", "false") \
-    .config("spark.hadoop.fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem") \
-    .getOrCreate()
-
-
-
-
-
     # Read JSONL file
     dataset = spark.read.json(dataset_path)
 
@@ -76,7 +67,6 @@ def process_selected_words(spark: SparkSession, dataset_path: str, selected_word
     for word in selected_words:
         count = dataset.filter(col("description").contains(word)).count()
         word_counts.append((word, count))
-        logger.debug(f"Word: {word}, Count: {count}")
 
     # Create DataFrame for output
     df_output = spark.createDataFrame(word_counts, ["word", "count"])
@@ -91,6 +81,7 @@ def process_selected_words(spark: SparkSession, dataset_path: str, selected_word
     # Optionally, print the word counts to the console
     for word, count in word_counts:
         print(f"Word: {word}, Count: {count}")
+        logger.info(f"Word: {word}, Count: {count}")
 
     # Explicitly flush logs
     for handler in logger.handlers:

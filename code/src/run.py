@@ -41,19 +41,17 @@ def main():
     parser_process = subparsers.add_parser("process_data")
     parser_process.add_argument("--cfg", required=True, help="Path to config file")
     parser_process.add_argument("--dirout", required=True, help="Output directory")
+    parser_process.add_argument("-dataset", required=True, help="Dataset name (news)")
 
     # Parser for process_data_all
     parser_process_all = subparsers.add_parser("process_data_all")
     parser_process_all.add_argument("--cfg", required=True, help="Path to config file")
     parser_process_all.add_argument("--dirout", required=True, help="Output directory")
+    parser_process_all.add_argument("-dataset", required=True, help="Dataset name (news)")
 
     args = parser.parse_args()
-    spark = SparkSession.builder \
-    .appName("WordProcessing") \
-    .config("spark.hadoop.fs.defaultFS", "file://") \
-    .config("spark.hadoop.fs.native.lib", "false") \
-    .config("spark.hadoop.fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem") \
-    .getOrCreate()
+    spark = SparkSession.builder.appName("WordProcessing").getOrCreate()
+
 
 
 
