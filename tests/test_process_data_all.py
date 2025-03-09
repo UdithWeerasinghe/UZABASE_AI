@@ -8,18 +8,18 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "code", "src"))
 
 # Now import the module
-from process_data import process_selected_words
+from process_data_all import process_all_words
 
-class TestProcessData(unittest.TestCase):
+class TestProcessDataAll(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.spark = SparkSession.builder.appName("TestWordProcessing").getOrCreate()
+        cls.spark = SparkSession.builder.appName("TestWordProcessingAll").getOrCreate()
 
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
 
-    def test_process_selected_words(self):
+    def test_process_all_words(self):
         # Create a temporary JSONL file for testing
         test_data = [
             {"description": "The president is in Asia."},
@@ -27,21 +27,18 @@ class TestProcessData(unittest.TestCase):
             {"description": "Asia is a continent."}
         ]
         test_df = self.spark.createDataFrame(test_data)
-        test_path = "test_data.jsonl"
+        test_path = "test_data_all.jsonl"
         test_df.write.json(test_path)
-
-        # Define selected words
-        selected_words = ["president", "the", "Asia"]
 
         # Define output directory
         output_dir = "ztmp/data"
         os.makedirs(output_dir, exist_ok=True)
 
-        # Process selected words
-        process_selected_words(self.spark, test_path, selected_words, output_dir)
+        # Process all words
+        process_all_words(self.spark, test_path, output_dir)
 
         # Check if the output file exists
-        output_path = Path(output_dir) / "word_count_20231010.parquet"
+        output_path = Path(output_dir) / "word_count_all_20231010.parquet"
         self.assertTrue(output_path.exists())
 
         # Clean up
