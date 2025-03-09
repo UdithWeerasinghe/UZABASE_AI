@@ -29,27 +29,6 @@ def load_config(config_path: str) -> dict:
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
-# def process_selected_words(spark: SparkSession, dataset_path: str, selected_words: list, output_dir: str) -> None:
-#     """Process selected words and save the result as a parquet file."""
-#     logger.info(f"Processing selected words: {selected_words}")
-    
-#     dataset = spark.read.option("header", True).csv(dataset_path)
-    
-#     word_counts = []
-#     for word in selected_words:
-#         count = dataset.filter(col("description").contains(word)).count()
-#         word_counts.append((word, count))
-#         logger.debug(f"Word: {word}, Count: {count}")
-    
-#     df_output = spark.createDataFrame(word_counts, ["word", "count"])
-#     output_path = Path(output_dir) / f"word_count_{pd.Timestamp.today().strftime('%Y%m%d')}.parquet"
-#     df_output.write.parquet(str(output_path))
-#     logger.info(f"Processed data saved to {output_path}")
-    
-#     # Explicitly flush logs
-#     for handler in logger.handlers:
-#         handler.flush()
-
 
 def process_selected_words(spark: SparkSession, dataset_path: str, selected_words: list, output_dir: str) -> None:
     """Process selected words from a JSONL file and save the result as a parquet file."""
@@ -80,7 +59,7 @@ def process_selected_words(spark: SparkSession, dataset_path: str, selected_word
 
     # Optionally, print the word counts to the console
     for word, count in word_counts:
-        print(f"Word: {word}, Count: {count}")
+        # print(f"Word: {word}, Count: {count}")
         logger.info(f"Word: {word}, Count: {count}")
 
     # Explicitly flush logs

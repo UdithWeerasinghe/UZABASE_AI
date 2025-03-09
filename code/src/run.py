@@ -52,10 +52,6 @@ def main():
     args = parser.parse_args()
     spark = SparkSession.builder.appName("WordProcessing").getOrCreate()
 
-
-
-
-
     if args.command == "process_data":
         logger.info("Running process_data command")
         config = load_config(args.cfg)

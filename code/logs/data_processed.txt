@@ -1,0 +1,4 @@
+2025-03-08 11:04:40,868 - process_data_all - INFO - Process started
+2025-03-08 11:05:27,936 - __main__ - INFO - Running process_data_all command
+2025-03-08 11:05:27,936 - __main__ - INFO - Loading configuration from config/cfg.yaml
+2025-03-08 11:05:27,936 - process_data_all - INFO - Processing all words in the dataset
