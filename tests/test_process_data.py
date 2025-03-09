@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from pyspark.sql import SparkSession
 import sys
+import pandas as pd
 
 # Add the src directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "code", "src"))
