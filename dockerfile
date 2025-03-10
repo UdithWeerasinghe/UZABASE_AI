@@ -334,6 +334,57 @@
 # # Set the entrypoint to use Conda environment when running the application
 # ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
 
+# # Use minimal Debian base image
+# FROM debian:latest
+
+# # Set non-interactive mode
+# ENV DEBIAN_FRONTEND=noninteractive
+
+# # Install necessary dependencies
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     wget git curl bzip2 ca-certificates libglib2.0-0 procps default-jdk && \
+#     rm -rf /var/lib/apt/lists/*  # Clean up APT cache
+
+# # Set JAVA_HOME
+# ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+# ENV PATH="$JAVA_HOME/bin:$PATH"
+
+# # Install Miniconda
+# RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+#     bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+#     rm /tmp/miniconda.sh  # Delete installer to save space
+
+# # Add Conda to PATH
+# ENV PATH="/opt/miniconda/bin:$PATH"
+
+# # Create Conda environment with minimal Python install
+# RUN conda create -n uzb_env python=3.11 -y && \
+#     conda clean --all -y  # Clean Conda cache
+
+# # Set working directory
+# WORKDIR /app
+
+# # Clone repo
+# RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
+
+# # Copy requirements
+# COPY requirements.txt /app/
+
+# # Install dependencies with pip inside Conda environment
+# RUN /bin/bash -c "source /opt/miniconda/bin/activate uzb_env && \
+#     pip install --no-cache-dir --break-system-packages -r requirements.txt && \
+#     conda clean --all -y && \
+#     rm -rf ~/.cache/pip"
+
+# # Ensure Conda environment is activated
+# ENV CONDA_DEFAULT_ENV=uzb_env
+# ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
+
+# # Run application
+# ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "uzb_env"]
+# CMD ["python", "code/src/run.py"]
+
+
 # Use minimal Debian base image
 FROM debian:latest
 
@@ -342,7 +393,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget git curl bzip2 ca-certificates libglib2.0-0 procps default-jdk && \
+    wget git curl bzip2 ca-certificates libglib2.0-0 procps openjdk-11-jdk && \
     rm -rf /var/lib/apt/lists/*  # Clean up APT cache
 
 # Set JAVA_HOME
@@ -357,9 +408,12 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 # Add Conda to PATH
 ENV PATH="/opt/miniconda/bin:$PATH"
 
-# Create Conda environment with minimal Python install
-RUN conda create -n uzb_env python=3.11 -y && \
+# Create Conda environment with Java
+RUN conda create -n uzb_env python=3.11 openjdk=11.0.1 -y && \
     conda clean --all -y  # Clean Conda cache
+
+# Ensure Java is set inside Conda
+RUN echo "export JAVA_HOME=$JAVA_HOME" >> /opt/miniconda/envs/uzb_env/bin/activate
 
 # Set working directory
 WORKDIR /app
@@ -380,8 +434,6 @@ RUN /bin/bash -c "source /opt/miniconda/bin/activate uzb_env && \
 ENV CONDA_DEFAULT_ENV=uzb_env
 ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
 
-# Run application
+# Set proper ENTRYPOINT to allow tests to run
 ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "uzb_env"]
 CMD ["python", "code/src/run.py"]
-
-
