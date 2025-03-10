@@ -340,10 +340,14 @@ FROM debian:latest
 # Set non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install only necessary dependencies
+# Install necessary dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget git curl bzip2 ca-certificates libglib2.0-0 && \
+    wget git curl bzip2 ca-certificates libglib2.0-0 procps default-jdk && \
     rm -rf /var/lib/apt/lists/*  # Clean up APT cache
+
+# Set JAVA_HOME
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Install Miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
@@ -377,5 +381,5 @@ ENV CONDA_DEFAULT_ENV=uzb_env
 ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
 
 # Run application
-ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "uzb_env", "python", "code/src/run.py"]
 
