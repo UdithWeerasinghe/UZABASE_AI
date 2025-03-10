@@ -330,7 +330,8 @@ ENV PATH="$SPARK_HOME/bin:$PATH"
 # Clone the repository and install dependencies
 RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
 WORKDIR /app
-RUN conda run -n uzb_env pip install --break-system-packages -r requirements.txt
+RUN /opt/conda/envs/uzb_env/bin/python -m pip install --break-system-packages -r requirements.txt
+
 
 # Set the entrypoint to use Conda environment when running the application
 #ENTRYPOINT ["/bin/bash", "-c"]
