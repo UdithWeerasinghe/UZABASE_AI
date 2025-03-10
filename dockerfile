@@ -288,52 +288,49 @@
 # CMD ["process_data", "--cfg", "code/config/cfg.yaml", "--dirout", "ztmp/data/"]
 
 
+# Use the latest stable Debian as the base image
 FROM debian:latest
 
-# Set non-interactive mode for installation
+# Set non-interactive mode for package installations
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and install required packages
-RUN apt update && apt upgrade -y && \
-    apt install -y wget curl unzip tar git build-essential software-properties-common openjdk-17-jdk
+# Install system dependencies required for Conda and Python
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    curl \
+    bzip2 \
+    ca-certificates \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME environment variable
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH="$JAVA_HOME/bin:$PATH"
+# Download & install Miniconda
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+    rm /tmp/miniconda.sh
 
-# Install Miniconda
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
-    bash miniconda.sh -b -p /opt/miniconda && \
-    rm miniconda.sh
-
-# Set Conda environment variables
+# Ensure Conda is in PATH
 ENV PATH="/opt/miniconda/bin:$PATH"
-SHELL ["/bin/bash", "-c"]  # Ensure all following commands use Bash
 
-# Create Conda environment and install dependencies
+# Create a Conda environment with Python 3.11
 RUN conda create -n uzb_env python=3.11 -y
 
-# Install PySpark inside Conda environment
-RUN conda run -n uzb_env pip install pyspark
-
-# Download and set up Apache Spark
-RUN wget https://dlcdn.apache.org/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
-    tar -xvf spark-3.5.5-bin-hadoop3.tgz && \
-    mv spark-3.5.5-bin-hadoop3 /opt/spark && \
-    rm spark-3.5.5-bin-hadoop3.tgz
-
-# Set Spark environment variables
-ENV SPARK_HOME=/opt/spark
-ENV PYSPARK_PYTHON=/opt/miniconda/envs/uzb_env/bin/python
-ENV PATH="$SPARK_HOME/bin:$PATH"
-
-# Clone the repository and install dependencies
-RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
+# Set the working directory
 WORKDIR /app
-RUN /opt/conda/envs/uzb_env/bin/python -m pip install --break-system-packages -r requirements.txt
 
+# Clone the repository
+RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
+
+# Copy requirements.txt if it exists
+COPY requirements.txt /app/
+
+# Activate Conda environment and install dependencies
+RUN /bin/bash -c "source /opt/miniconda/bin/activate uzb_env && pip install --break-system-packages -r requirements.txt"
+
+# Ensure the Conda environment is activated when running the container
+ENV CONDA_DEFAULT_ENV=uzb_env
+ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
 
 # Set the entrypoint to use Conda environment when running the application
-#ENTRYPOINT ["/bin/bash", "-c"]
-ENTRYPOINT ["/bin/bash", "-c", "conda run -n uzb_env python code/src/run.py"]
-CMD ["conda run -n uzb_env python code/src/run.py process_data -cfg code/config/cfg.yaml -dataset news -dirout 'ztmp/data/'"]
+ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
+
