@@ -59,4 +59,4 @@ jobs:
 
       - name: Capture Docker Build Logs
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/ai_data_engineer:latest -f code/Dockerfile . > logs/Docker_build.txt 2>&1
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/ai_data_engineer:latest . > logs/Docker_build.txt 2>&1
