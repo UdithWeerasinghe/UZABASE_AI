@@ -288,49 +288,92 @@
 # CMD ["process_data", "--cfg", "code/config/cfg.yaml", "--dirout", "ztmp/data/"]
 
 
-# Use the latest stable Debian as the base image
+# # Use the latest stable Debian as the base image
+# FROM debian:latest
+
+# # Set non-interactive mode for package installations
+# ENV DEBIAN_FRONTEND=noninteractive
+
+# # Install system dependencies required for Conda and Python
+# RUN apt-get update && apt-get install -y \
+#     wget \
+#     git \
+#     curl \
+#     bzip2 \
+#     ca-certificates \
+#     libglib2.0-0 \
+#     && rm -rf /var/lib/apt/lists/*
+
+# # Download & install Miniconda
+# RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+#     bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+#     rm /tmp/miniconda.sh
+
+# # Ensure Conda is in PATH
+# ENV PATH="/opt/miniconda/bin:$PATH"
+
+# # Create a Conda environment with Python 3.11
+# RUN conda create -n uzb_env python=3.11 -y
+
+# # Set the working directory
+# WORKDIR /app
+
+# # Clone the repository
+# RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
+
+# # Copy requirements.txt if it exists
+# COPY requirements.txt /app/
+
+# # Activate Conda environment and install dependencies
+# RUN /bin/bash -c "source /opt/miniconda/bin/activate uzb_env && pip install --break-system-packages -r requirements.txt"
+
+# # Ensure the Conda environment is activated when running the container
+# ENV CONDA_DEFAULT_ENV=uzb_env
+# ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
+
+# # Set the entrypoint to use Conda environment when running the application
+# ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
+
+# Use latest Debian
 FROM debian:latest
 
-# Set non-interactive mode for package installations
+# Set non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies required for Conda and Python
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    wget \
-    git \
-    curl \
-    bzip2 \
-    ca-certificates \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+    wget git curl bzip2 ca-certificates libglib2.0-0 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Download & install Miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
     bash /tmp/miniconda.sh -b -p /opt/miniconda && \
     rm /tmp/miniconda.sh
 
-# Ensure Conda is in PATH
+# Add Conda to PATH
 ENV PATH="/opt/miniconda/bin:$PATH"
 
-# Create a Conda environment with Python 3.11
+# Create Conda environment with Python 3.11
 RUN conda create -n uzb_env python=3.11 -y
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Clone the repository
+# Clone repo
 RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
 
-# Copy requirements.txt if it exists
+# Copy requirements
 COPY requirements.txt /app/
 
-# Activate Conda environment and install dependencies
-RUN /bin/bash -c "source /opt/miniconda/bin/activate uzb_env && pip install --break-system-packages -r requirements.txt"
+# Install dependencies inside Conda environment
+RUN /bin/bash -c "source /opt/miniconda/bin/activate uzb_env && \
+    pip install --break-system-packages -r requirements.txt && \
+    conda clean --all -y && \
+    rm -rf ~/.cache/pip"
 
-# Ensure the Conda environment is activated when running the container
+# Ensure Conda environment is activated
 ENV CONDA_DEFAULT_ENV=uzb_env
 ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
 
-# Set the entrypoint to use Conda environment when running the application
+# Run application
 ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
-
