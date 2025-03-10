@@ -118,60 +118,53 @@
 
 FROM debian:latest
 
-# Set environment variables to avoid interactive prompts during package installation
+# Set non-interactive mode to prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update package list and install required dependencies
+# Install system dependencies
 RUN apt update && apt upgrade -y && \
-    apt install -y \
-    wget \
-    curl \
-    unzip \
-    tar \
-    git \
-    build-essential \
-    software-properties-common \
-    openjdk-17-jdk \
-    python3.11 \
-    python3.11-venv \
-    python3.11-dev \
-    python3-pip \
-    python3-venv && \
+    apt install -y wget curl unzip tar git build-essential software-properties-common openjdk-17-jdk && \
     apt clean && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME and update PATH
+# Set JAVA_HOME environment variable
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
-# Download and install Apache Spark
+# Install Miniconda
+WORKDIR /opt
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p /opt/miniconda && \
+    rm miniconda.sh
+ENV PATH="/opt/miniconda/bin:$PATH"
+
+# Create and activate Conda environment
+RUN conda create -n uzb_env python=3.11 -y && \
+    echo "conda activate uzb_env" >> ~/.bashrc
+
+# Set working directory
+WORKDIR /app
+
+# Install PySpark
+RUN /opt/miniconda/bin/conda run -n uzb_env pip install pyspark
+
+# Install Apache Spark
 RUN wget https://dlcdn.apache.org/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
     tar -xvf spark-3.5.5-bin-hadoop3.tgz && \
     mv spark-3.5.5-bin-hadoop3 /opt/spark && \
     rm spark-3.5.5-bin-hadoop3.tgz
 
-# Set SPARK_HOME and PATH
+# Set Spark environment variables
 ENV SPARK_HOME=/opt/spark
 ENV PATH="$SPARK_HOME/bin:$PATH"
+ENV PYSPARK_PYTHON="/opt/miniconda/envs/uzb_env/bin/python"
 
-# Create and activate a Python virtual environment
-RUN python3.11 -m venv /uzb
-ENV PATH="/uzb/bin:$PATH"
-
-# Install PySpark inside the virtual environment
-RUN /uzb/bin/pip install pyspark
-
-# Set working directory
+# Clone repository
+RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
 WORKDIR /app
 
-# Clone the repository
-RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
-
-# Install dependencies
-RUN /uzb/bin/pip install --break-system-packages -r /app/requirements.txt
-
-# Set PYSPARK_PYTHON to the virtual environment Python
-ENV PYSPARK_PYTHON=/uzb/bin/python
+# Install project dependencies
+RUN /opt/miniconda/bin/conda run -n uzb_env pip install --break-system-packages -r requirements.txt
 
 # Define entrypoint for running the application
-ENTRYPOINT ["/uzb/bin/python", "code/src/run.py"]
+ENTRYPOINT ["/opt/miniconda/bin/conda", "run", "-n", "uzb_env", "python", "code/src/run.py"]
 CMD ["process_data", "--cfg", "code/config/cfg.yaml", "--dirout", "ztmp/data/"]
