@@ -393,11 +393,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget git curl bzip2 ca-certificates libglib2.0-0 procps openjdk-11-jdk && \
+    wget git curl bzip2 ca-certificates libglib2.0-0 procps openjdk-17-jdk && \
     rm -rf /var/lib/apt/lists/*  # Clean up APT cache
 
 # Set JAVA_HOME
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Install Miniconda
@@ -409,7 +409,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 ENV PATH="/opt/miniconda/bin:$PATH"
 
 # Create Conda environment with Java
-RUN conda create -n uzb_env python=3.11 openjdk=11.0.1 -y && \
+RUN conda create -n uzb_env python=3.11 openjdk=17 -y && \
     conda clean --all -y  # Clean Conda cache
 
 # Ensure Java is set inside Conda
