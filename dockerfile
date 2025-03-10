@@ -381,5 +381,7 @@ ENV CONDA_DEFAULT_ENV=uzb_env
 ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
 
 # Run application
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "uzb_env", "python", "code/src/run.py"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "uzb_env"]
+CMD ["python", "code/src/run.py"]
+
 
