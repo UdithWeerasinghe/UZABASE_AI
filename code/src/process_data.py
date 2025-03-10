@@ -24,14 +24,33 @@ logging.getLogger("py4j").setLevel(logging.WARNING)
 
 
 def load_config(config_path: str) -> dict:
-    """Load configuration from a YAML file."""
+    """
+    Load configuration from a YAML file.
+
+    Args:
+        config_path (str): Path to the YAML configuration file.
+
+    Returns:
+        dict: Configuration data loaded from the YAML file.
+    """
     logger.info(f"Loading configuration from {config_path}")
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
 
 def process_selected_words(spark: SparkSession, dataset_path: str, selected_words: list, output_dir: str) -> None:
-    """Process selected words from a JSONL file and save the result as a parquet file."""
+    """
+    Process selected words from a JSONL dataset and save the word count as a Parquet file.
+
+    Args:
+        spark (SparkSession): The active Spark session.
+        dataset_path (str): Path to the dataset file in JSONL format.
+        selected_words (list[str]): List of words to count in the dataset.
+        output_dir (str): Directory where the output Parquet file should be saved.
+
+    Returns:
+        None
+    """
     logger.info(f"Processing selected words: {selected_words}")
 
     # Read JSONL file

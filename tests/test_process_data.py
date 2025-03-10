@@ -13,18 +13,39 @@ from process_data import process_selected_words
 from process_data_all import process_all_words
 
 class TestWordProcessing(unittest.TestCase):
+    """
+    Unit tests for processing selected words and all words in the AG News dataset.
+    """
+
     @classmethod
     def setUpClass(cls):
-        """Set up Spark session for testing."""
+        """
+        Set up the Spark session before running the test cases.
+
+        Returns:
+            None
+        """
         cls.spark = SparkSession.builder.appName("TestWordProcessing").getOrCreate()
 
     @classmethod
     def tearDownClass(cls):
-        """Stop Spark session after all tests."""
+        """
+        Stop the Spark session after running all test cases.
+
+        Returns:
+            None
+        """
         cls.spark.stop()
 
     def test_process_selected_words(self):
-        """Test the processing of selected words."""
+        """
+        Test the processing of selected words from the dataset.
+
+        Ensures that the correct Parquet file is created and contains word counts.
+
+        Returns:
+            None
+        """
         test_data = [
             {"description": "The president is in Asia."},
             {"description": "The president is not in Asia."},
@@ -55,7 +76,14 @@ class TestWordProcessing(unittest.TestCase):
         self._cleanup(output_dir, test_path)
 
     def test_process_all_words(self):
-        """Test the processing of all words in the dataset."""
+        """
+        Test the processing of all words in the dataset.
+
+        Ensures that all unique words from the 'description' column are counted and saved.
+
+        Returns:
+            None
+        """
         test_data = [
             {"description": "The president is in Asia."},
             {"description": "The president is not in Asia."},
@@ -91,7 +119,16 @@ class TestWordProcessing(unittest.TestCase):
         self._cleanup(output_dir, test_path, test_dir)
 
     def _cleanup(self, output_dir, *paths):
-        """Remove test files and directories."""
+        """
+        Remove test files and directories after tests run.
+
+        Args:
+            output_dir (str): The main output directory where results are stored.
+            *paths (str): Additional file or directory paths to remove.
+
+        Returns:
+            None
+        """
         for path in paths:
             if os.path.isfile(path):
                 os.remove(path)

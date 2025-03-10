@@ -24,13 +24,31 @@ logging.getLogger("py4j").setLevel(logging.WARNING)
 logger.info("Process started") 
 
 def load_config(config_path: str) -> dict:
-    """Load configuration from a YAML file."""
+    """
+    Load configuration from a YAML file.
+
+    Args:
+        config_path (str): Path to the YAML configuration file.
+
+    Returns:
+        dict: Configuration data loaded from the YAML file.
+    """
     logger.info(f"Loading configuration from {config_path}")
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 
 def process_all_words(spark: SparkSession, dataset_path: str, output_dir: str) -> None:
-    """Process all words and save the result as a parquet file."""
+    """
+    Process all words from the dataset's 'description' column and save their counts as a Parquet file.
+
+    Args:
+        spark (SparkSession): The active Spark session.
+        dataset_path (str): Path to the dataset file in JSONL format.
+        output_dir (str): Directory where the output Parquet file should be saved.
+
+    Returns:
+        None
+    """
     logger.info("Processing all words in the dataset")
     
     dataset = spark.read.json(dataset_path)

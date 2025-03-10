@@ -32,7 +32,12 @@ def load_config(config_path: str) -> dict:
 
 def main():
     """
-    Main function to process AG News dataset based on command-line arguments.
+    Main function to parse command-line arguments and execute the appropriate data processing function.
+
+    Processes selected words or all words from the AG News dataset based on user input.
+
+    Returns:
+        None
     """
     parser = argparse.ArgumentParser(description="Process AG News dataset.")
     subparsers = parser.add_subparsers(dest="command")
