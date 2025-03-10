@@ -118,53 +118,63 @@
 
 FROM debian:latest
 
-# Set non-interactive mode to prevent interactive prompts during installation
+# Set environment variables to avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
+# Update package list and install required dependencies
 RUN apt update && apt upgrade -y && \
-    apt install -y wget curl unzip tar git build-essential software-properties-common openjdk-17-jdk && \
-    apt clean && rm -rf /var/lib/apt/lists/*
+    apt install -y \
+    wget \
+    curl \
+    unzip \
+    tar \
+    git \
+    build-essential \
+    software-properties-common \
+    openjdk-17-jdk \
+    bash
 
-# Set JAVA_HOME environment variable
+# Set JAVA_HOME and update PATH for Java 17
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH="$JAVA_HOME/bin:$PATH"
+ENV PATH=$JAVA_HOME/bin:$PATH
 
 # Install Miniconda
-WORKDIR /opt
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
-    bash miniconda.sh -b -p /opt/miniconda && \
-    rm miniconda.sh
-ENV PATH="/opt/miniconda/bin:$PATH"
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p /opt/miniconda && \
+    rm /tmp/miniconda.sh
 
-# Create and activate Conda environment
-RUN conda create -n uzb_env python=3.11 -y && \
-    echo "conda activate uzb_env" >> ~/.bashrc
+# Set Conda environment variables
+ENV PATH="/opt/miniconda/bin:$PATH"
+RUN conda init bash
+
+# Create Conda environment and install Python
+RUN conda create -n uzb_env python=3.11 -y
+
+# Set the shell to bash for correct Conda activation
+SHELL ["/bin/bash", "-c"]
+
+# Activate Conda environment and install PySpark
+RUN source /opt/miniconda/bin/activate uzb_env && pip install pyspark
+
+# Install Spark
+RUN wget https://dlcdn.apache.org/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
+    tar -xvf spark-3.5.5-bin-hadoop3.tgz && \
+    mv spark-3.5.5-bin-hadoop3 /opt/spark
+
+# Set Spark environment variables
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+ENV PYSPARK_PYTHON=/opt/miniconda/envs/uzb_env/bin/python
 
 # Set working directory
 WORKDIR /app
 
-# Install PySpark
-RUN /opt/miniconda/bin/conda run -n uzb_env pip install pyspark
+# Copy application files into the container
+COPY . .
 
-# Install Apache Spark
-RUN wget https://dlcdn.apache.org/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
-    tar -xvf spark-3.5.5-bin-hadoop3.tgz && \
-    mv spark-3.5.5-bin-hadoop3 /opt/spark && \
-    rm spark-3.5.5-bin-hadoop3.tgz
-
-# Set Spark environment variables
-ENV SPARK_HOME=/opt/spark
-ENV PATH="$SPARK_HOME/bin:$PATH"
-ENV PYSPARK_PYTHON="/opt/miniconda/envs/uzb_env/bin/python"
-
-# Clone repository
-RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
-WORKDIR /app
-
-# Install project dependencies
-RUN /opt/miniconda/bin/conda run -n uzb_env pip install --break-system-packages -r requirements.txt
+# Install project dependencies inside the Conda environment
+RUN source /opt/miniconda/bin/activate uzb_env && pip install -r requirements.txt
 
 # Define entrypoint for running the application
-ENTRYPOINT ["/opt/miniconda/bin/conda", "run", "-n", "uzb_env", "python", "code/src/run.py"]
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/miniconda/bin/activate uzb_env && exec python code/src/run.py"]
 CMD ["process_data", "--cfg", "code/config/cfg.yaml", "--dirout", "ztmp/data/"]
