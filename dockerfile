@@ -207,16 +207,21 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 
 # Set Conda environment variables
 ENV PATH="/opt/miniconda/bin:$PATH"
+RUN conda init bash
 
-# Create Conda environment and install Python & dependencies
-RUN conda create -n uzb_env python=3.11 -y && \
-    conda run -n uzb_env pip install pyspark
+# Create Conda environment and install Python
+RUN conda create -n uzb_env python=3.11 -y
+
+# Activate Conda environment for the rest of the setup
+SHELL ["/bin/bash", "-c"]
+
+# Install PySpark in the Conda environment
+RUN source activate uzb_env && pip install pyspark
 
 # Install Spark
 RUN wget https://dlcdn.apache.org/spark/spark-3.5.5/spark-3.5.5-bin-hadoop3.tgz && \
     tar -xvf spark-3.5.5-bin-hadoop3.tgz && \
-    mv spark-3.5.5-bin-hadoop3 /opt/spark && \
-    rm spark-3.5.5-bin-hadoop3.tgz
+    mv spark-3.5.5-bin-hadoop3 /opt/spark
 
 # Set Spark environment variables
 ENV SPARK_HOME=/opt/spark
@@ -230,8 +235,8 @@ WORKDIR /app
 COPY . .
 
 # Install project dependencies inside the Conda environment
-RUN conda run -n uzb_env pip install -r requirements.txt
+RUN source activate uzb_env && pip install --break-system-packages -r requirements.txt
 
 # Define entrypoint for running the application
-ENTRYPOINT ["conda", "run", "-n", "uzb_env", "python", "code/src/run.py"]
+ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
 CMD ["process_data", "--cfg", "code/config/cfg.yaml", "--dirout", "ztmp/data/"]
