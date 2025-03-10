@@ -334,27 +334,28 @@
 # # Set the entrypoint to use Conda environment when running the application
 # ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
 
-# Use latest Debian
+# Use minimal Debian base image
 FROM debian:latest
 
 # Set non-interactive mode
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install only necessary dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     wget git curl bzip2 ca-certificates libglib2.0-0 && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*  # Clean up APT cache
 
-# Download & install Miniconda
+# Install Miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
     bash /tmp/miniconda.sh -b -p /opt/miniconda && \
-    rm /tmp/miniconda.sh
+    rm /tmp/miniconda.sh  # Delete installer to save space
 
 # Add Conda to PATH
 ENV PATH="/opt/miniconda/bin:$PATH"
 
-# Create Conda environment with Python 3.11
-RUN conda create -n uzb_env python=3.11 -y
+# Create Conda environment with minimal Python install
+RUN conda create -n uzb_env python=3.11 -y && \
+    conda clean --all -y  # Clean Conda cache
 
 # Set working directory
 WORKDIR /app
@@ -365,9 +366,9 @@ RUN git clone https://github.com/UdithWeerasinghe/UZABASE_AI.git /app
 # Copy requirements
 COPY requirements.txt /app/
 
-# Install dependencies inside Conda environment
+# Install dependencies with pip inside Conda environment
 RUN /bin/bash -c "source /opt/miniconda/bin/activate uzb_env && \
-    pip install --break-system-packages -r requirements.txt && \
+    pip install --no-cache-dir --break-system-packages -r requirements.txt && \
     conda clean --all -y && \
     rm -rf ~/.cache/pip"
 
@@ -377,3 +378,4 @@ ENV PATH="/opt/miniconda/envs/uzb_env/bin:$PATH"
 
 # Run application
 ENTRYPOINT ["/bin/bash", "-c", "source activate uzb_env && python code/src/run.py"]
+

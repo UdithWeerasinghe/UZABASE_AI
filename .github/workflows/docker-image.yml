@@ -11,6 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Free Up Disk Space
+        run: |
+          echo "Before cleanup:"
+          df -h
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet /var/lib/apt/lists/*
+          sudo apt-get clean
+          sudo apt-get autoremove -y
+          docker system prune -af
+          echo "After cleanup:"
+          df -h  # Check available space after cleanup
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -26,7 +37,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/ai_data_engineer:latest .
+          docker build --no-cache -t ${{ secrets.DOCKER_USERNAME }}/ai_data_engineer:latest .
 
       - name: Run Tests
         run: |
